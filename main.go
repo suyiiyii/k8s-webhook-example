@@ -12,7 +12,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-const KEYWORD = "SUYIIYII"
+const KEYWORD = "suyiiyii"
 
 // validateResource 检查资源名称是否包含禁止的关键词
 func validateResource(req *admissionv1.AdmissionRequest) *admissionv1.AdmissionResponse {
