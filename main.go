@@ -38,7 +38,7 @@ func validateResource(req *admissionv1.AdmissionRequest) *admissionv1.AdmissionR
 	}
 
 	// 检查资源名称是否包含关键词 "KEYWORD"
-	if strings.Contains(strings.ToUpper(resourceName), KEYWORD) {
+	if strings.Contains(strings.ToLower(resourceName), KEYWORD) {
 		resp.Allowed = false
 		resp.Result = &metav1.Status{
 			Code:    403,
