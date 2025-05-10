@@ -4,15 +4,17 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"strings"
 
+	"github.com/sirupsen/logrus"
 	admissionv1 "k8s.io/api/admission/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 const KEYWORD = "suyiiyii"
+
+var log = logrus.New()
 
 // validateResource 检查资源名称是否包含禁止的关键词
 func validateResource(req *admissionv1.AdmissionRequest) *admissionv1.AdmissionResponse {
@@ -44,6 +46,17 @@ func validateResource(req *admissionv1.AdmissionRequest) *admissionv1.AdmissionR
 			Code:    403,
 			Message: fmt.Sprintf("资源名称中不允许包含 '%s'，当前名称: %s", KEYWORD, resourceName),
 		}
+
+		log.WithFields(logrus.Fields{
+			"resource": resourceName,
+			"keyword":  KEYWORD,
+			"allowed":  resp.Allowed,
+		}).Warn("Resource validation failed")
+	} else {
+		log.WithFields(logrus.Fields{
+			"resource": resourceName,
+			"allowed":  resp.Allowed,
+		}).Info("Resource validation passed")
 	}
 
 	return resp
@@ -54,13 +67,20 @@ func handleValidate(w http.ResponseWriter, r *http.Request) {
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		http.Error(w, "Failed to read request body", http.StatusBadRequest)
+		log.WithError(err).Error("Failed to read request body")
 		return
 	}
+
+	// 记录接收到的请求
+	log.WithFields(logrus.Fields{
+		"request": string(body),
+	}).Info("Received admission review request")
 
 	// 解析 AdmissionReview 请求
 	var admissionReview admissionv1.AdmissionReview
 	if err := json.Unmarshal(body, &admissionReview); err != nil {
 		http.Error(w, "Failed to unmarshal request", http.StatusBadRequest)
+		log.WithError(err).Error("Failed to unmarshal request")
 		return
 	}
 
@@ -74,20 +94,31 @@ func handleValidate(w http.ResponseWriter, r *http.Request) {
 	responseJSON, err := json.Marshal(admissionReview)
 	if err != nil {
 		http.Error(w, "Failed to marshal response", http.StatusInternalServerError)
+		log.WithError(err).Error("Failed to marshal response")
 		return
 	}
+
+	// 记录响应
+	log.WithFields(logrus.Fields{
+		"response": string(responseJSON),
+		"allowed":  admissionResponse.Allowed,
+	}).Info("Sending admission review response")
 
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(responseJSON)
 }
 
 func main() {
+	// 配置 logrus
+	log.SetFormatter(&logrus.JSONFormatter{})
+	log.SetLevel(logrus.InfoLevel)
+
 	// 注册 webhook 处理器
 	http.HandleFunc("/validate", handleValidate)
 
 	// 启动服务器
-	log.Println("Starting webhook server on :8080")
+	log.Info("Starting webhook server on :8080")
 	if err := http.ListenAndServe(":8080", nil); err != nil {
-		log.Fatalf("Failed to start server: %v", err)
+		log.WithError(err).Fatal("Failed to start server")
 	}
 }
