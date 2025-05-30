@@ -1,0 +1,21 @@
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingWebhookConfiguration
+metadata:
+  name: suyiiyii-keyword-validator
+webhooks:
+- name: keyword-validator.suyiiyii.com
+  admissionReviewVersions: ["v1", "v1beta1"]
+  sideEffects: None
+  failurePolicy: Ignore
+  clientConfig:
+    url: "https://ks-webh-example-wsvzbbnlum.cn-shenzhen.fcapp.run/validate"
+  namespaceSelector:
+    matchLabels:
+      webhook-validation: enabled
+  rules:
+  - apiGroups: ["*"]
+    apiVersions: ["*"]
+    operations: ["CREATE", "UPDATE"]
+    resources: ["*"]
+    scope: "Namespaced"
+  timeoutSeconds: 5

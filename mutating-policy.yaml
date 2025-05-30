@@ -1,0 +1,20 @@
+apiVersion: admissionregistration.k8s.io/v1
+kind: MutatingWebhookConfiguration
+metadata:
+  name: "add-created-by-label-webhook"
+webhooks:
+- name: "mutate.suyiiyii.com"
+  clientConfig:
+    url: "https://ks-webh-example-wsvzbbnlum.cn-shenzhen.fcapp.run/mutate"
+  rules:
+  - operations: ["CREATE"]
+    apiGroups: [""]
+    apiVersions: ["v1"]
+    resources: ["pods"]
+  failurePolicy: Fail
+  sideEffects: None
+  admissionReviewVersions: ["v1", "v1beta1"]
+  namespaceSelector:
+    matchLabels:
+      webhook-mutation: enabled
+  timeoutSeconds: 5
