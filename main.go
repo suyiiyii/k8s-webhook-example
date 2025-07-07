@@ -132,8 +132,8 @@ func mutateResource(req *admissionv1.AdmissionRequest) *admissionv1.AdmissionRes
 	resp.PatchType = &patchType
 
 	log.WithFields(logrus.Fields{
-		"pod":    pod.Name,
-		"patch":  string(patchBytes),
+		"pod":   pod.Name,
+		"patch": string(patchBytes),
 	}).Info("Added create-by label to pod")
 
 	return resp

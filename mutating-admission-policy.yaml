@@ -1,0 +1,34 @@
+apiVersion: admissionregistration.k8s.io/v1alpha1
+kind: MutatingAdmissionPolicy
+metadata:
+  name: add-manage-by-label
+spec:
+  matchConstraints:
+    resourceRules:
+    - apiGroups:   ["*"]
+      apiVersions: ["*"]
+      operations:  ["CREATE"]
+      resources:   ["*"]
+  failurePolicy: Fail
+  reinvocationPolicy: IfNeeded
+  mutations:
+    - patchType: "JSONPatch"
+      jsonPatch:
+        expression: >
+          [
+            JSONPatch{
+              op: "add",
+              path: "/metadata/labels/" + jsonpatch.escapeKey("manage-by"),
+              value: "suyiiyii"
+            }
+          ]
+---
+# apiVersion: admissionregistration.k8s.io/v1
+# kind: MutatingAdmissionPolicyBinding
+# metadata:
+#   name: add-manage-by-label-binding
+# spec:
+#   policyName: add-manage-by-label
+#   matchResources:
+#     namespaceSelector:
+#       matchLabels: {}
